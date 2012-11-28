@@ -1,0 +1,61 @@
+<html>
+    <head>
+    <title>pprinttable.py</title>
+    </head>
+    <body>
+    <h3>pprinttable.py (<a href="../pprinttable.py">original</a>)</h3>
+    <hr>
+    <pre>
+  <span style="color: green; font-style: italic"># pprinttable.py
+# --------------
+# Licensing Information: Please do not distribute or publish solutions to this
+# project. You are free to use and extend these projects for educational
+# purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
+# John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
+
+</span><span style="color: darkred">"""
+pprinttable: a function for prettier tabular output.
+"""
+
+</span><span style="color: blue; font-weight: bold">def </span>pprinttable<span style="font-weight: bold">(</span>rows<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""
+    input: an iterable of namedtuples
+    Print each item of each row in columnar format
+    By MattH via http://stackoverflow.com/questions/5909873/python-pretty-printing-ascii-tables
+
+    &gt;&gt;&gt; from collections import namedtuple
+    &gt;&gt;&gt; Row = namedtuple('Row',['first','second','third'])
+    &gt;&gt;&gt; pprinttable([Row(1,2,3), Row(1234567,11,12)])
+    first   | second | third
+    --------+--------+------
+          1 |      2 |     3
+    1234567 |     11 |    12
+    """
+
+    </span>headers <span style="font-weight: bold">= </span>rows<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">].</span>_fields
+    lens <span style="font-weight: bold">= []
+    </span><span style="color: blue; font-weight: bold">for </span>i <span style="color: blue; font-weight: bold">in </span>range<span style="font-weight: bold">(</span>len<span style="font-weight: bold">(</span>rows<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">])):
+        </span>lens<span style="font-weight: bold">.</span>append<span style="font-weight: bold">(</span>len<span style="font-weight: bold">(</span>str<span style="font-weight: bold">(</span>max<span style="font-weight: bold">([</span>x<span style="font-weight: bold">[</span>i<span style="font-weight: bold">] </span><span style="color: blue; font-weight: bold">for </span>x <span style="color: blue; font-weight: bold">in </span>rows<span style="font-weight: bold">] + [</span>headers<span style="font-weight: bold">[</span>i<span style="font-weight: bold">]],</span>key<span style="font-weight: bold">=</span><span style="color: blue; font-weight: bold">lambda </span>x<span style="font-weight: bold">:</span>len<span style="font-weight: bold">(</span>str<span style="font-weight: bold">(</span>x<span style="font-weight: bold">))))))
+    </span>formats <span style="font-weight: bold">= []
+    </span>hformats <span style="font-weight: bold">= []
+    </span><span style="color: blue; font-weight: bold">for </span>i <span style="color: blue; font-weight: bold">in </span>range<span style="font-weight: bold">(</span>len<span style="font-weight: bold">(</span>rows<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">])):
+        </span><span style="color: blue; font-weight: bold">if </span>isinstance<span style="font-weight: bold">(</span>rows<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">][</span>i<span style="font-weight: bold">], </span>int<span style="font-weight: bold">):
+            </span>formats<span style="font-weight: bold">.</span>append<span style="font-weight: bold">(</span><span style="color: red">"%%%dd" </span><span style="font-weight: bold">% </span>lens<span style="font-weight: bold">[</span>i<span style="font-weight: bold">])
+        </span><span style="color: blue; font-weight: bold">elif </span>isinstance<span style="font-weight: bold">(</span>rows<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">][</span>i<span style="font-weight: bold">], </span>float<span style="font-weight: bold">):
+            </span>formats<span style="font-weight: bold">.</span>append<span style="font-weight: bold">(</span><span style="color: red">"%%%df" </span><span style="font-weight: bold">% </span>lens<span style="font-weight: bold">[</span>i<span style="font-weight: bold">])
+        </span><span style="color: blue; font-weight: bold">else</span><span style="font-weight: bold">:
+            </span>formats<span style="font-weight: bold">.</span>append<span style="font-weight: bold">(</span><span style="color: red">"%%-%ds" </span><span style="font-weight: bold">% </span>lens<span style="font-weight: bold">[</span>i<span style="font-weight: bold">])
+        </span>hformats<span style="font-weight: bold">.</span>append<span style="font-weight: bold">(</span><span style="color: red">"%%-%ds" </span><span style="font-weight: bold">% </span>lens<span style="font-weight: bold">[</span>i<span style="font-weight: bold">])
+    </span>pattern <span style="font-weight: bold">= </span><span style="color: red">" | "</span><span style="font-weight: bold">.</span>join<span style="font-weight: bold">(</span>formats<span style="font-weight: bold">)
+    </span>hpattern <span style="font-weight: bold">= </span><span style="color: red">" | "</span><span style="font-weight: bold">.</span>join<span style="font-weight: bold">(</span>hformats<span style="font-weight: bold">)
+    </span>separator <span style="font-weight: bold">= </span><span style="color: red">"-+-"</span><span style="font-weight: bold">.</span>join<span style="font-weight: bold">([</span><span style="color: red">'-' </span><span style="font-weight: bold">* </span>n <span style="color: blue; font-weight: bold">for </span>n <span style="color: blue; font-weight: bold">in </span>lens<span style="font-weight: bold">])
+    </span><span style="color: blue; font-weight: bold">print </span>hpattern <span style="font-weight: bold">% </span>tuple<span style="font-weight: bold">(</span>headers<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">print </span>separator
+    <span style="color: blue; font-weight: bold">for </span>line <span style="color: blue; font-weight: bold">in </span>rows<span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">print </span>pattern <span style="font-weight: bold">% </span>tuple<span style="font-weight: bold">(</span>line<span style="font-weight: bold">)
+</span>
+    </pre>
+    </body>
+    </html>
+    

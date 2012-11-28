@@ -1,0 +1,152 @@
+<html>
+    <head>
+    <title>hardcoded_mdp.py</title>
+    </head>
+    <body>
+    <h3>hardcoded_mdp.py (<a href="../hardcoded_mdp.py">original</a>)</h3>
+    <hr>
+    <pre>
+  <span style="color: green; font-style: italic"># hardcoded_mdp.py
+# ----------------
+# Licensing Information: Please do not distribute or publish solutions to this
+# project. You are free to use and extend these projects for educational
+# purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
+# John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
+
+</span><span style="color: darkred">"""
+Provide a way to hardcode an MDP for use via gridworld.py via a class named T.
+The EXAMPLE_MDP constant below illustrates how to use T.
+
+"""
+
+</span><span style="color: blue; font-weight: bold">import </span>random
+<span style="color: blue; font-weight: bold">import </span>sys
+<span style="color: blue; font-weight: bold">import </span>mdp
+<span style="color: blue; font-weight: bold">import </span>environment
+<span style="color: blue; font-weight: bold">import </span>util
+<span style="color: blue; font-weight: bold">import </span>optparse
+
+<span style="color: blue; font-weight: bold">class </span>T<span style="font-weight: bold">(</span>object<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""
+    T represents an MDP transition from state s1 via action a to state s2,
+    with the given probability, resulting in the given reward.
+    """
+
+    </span><span style="color: blue; font-weight: bold">def </span>__init__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>s1<span style="font-weight: bold">, </span>a<span style="font-weight: bold">, </span>s2<span style="font-weight: bold">, </span>probability<span style="font-weight: bold">, </span>reward<span style="font-weight: bold">=</span><span style="color: red">0</span><span style="font-weight: bold">):
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>s1 <span style="font-weight: bold">= </span>s1
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>a <span style="font-weight: bold">= </span>a
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>s2 <span style="font-weight: bold">= </span>s2
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>probability <span style="font-weight: bold">= </span>probability
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>reward <span style="font-weight: bold">= </span>reward
+
+<span style="color: blue; font-weight: bold">class </span>HardcodedMDP<span style="font-weight: bold">(</span>mdp<span style="font-weight: bold">.</span>MarkovDecisionProcess<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""
+      Hardcoded MDP, e.g. for testing.
+    """
+    </span><span style="color: blue; font-weight: bold">def </span>__init__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>startstate<span style="font-weight: bold">, </span>transitions<span style="font-weight: bold">):
+        </span><span style="color: green; font-style: italic"># transitions is a hard-coded list of T objects
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>startstate <span style="font-weight: bold">= </span>startstate
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>transitions <span style="font-weight: bold">= </span>transitions
+
+    <span style="color: blue; font-weight: bold">def </span>getPossibleActions<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>state<span style="font-weight: bold">):
+        </span><span style="color: darkred">"""
+        Returns list of valid actions for 'state'.
+        """
+        </span>actions <span style="font-weight: bold">= [</span>t<span style="font-weight: bold">.</span>a <span style="color: blue; font-weight: bold">for </span>t <span style="color: blue; font-weight: bold">in </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>transitions <span style="color: blue; font-weight: bold">if </span>t<span style="font-weight: bold">.</span>s1 <span style="font-weight: bold">== </span>state<span style="font-weight: bold">]
+        </span><span style="color: blue; font-weight: bold">return </span>list<span style="font-weight: bold">(</span>set<span style="font-weight: bold">(</span>actions<span style="font-weight: bold">))
+
+    </span><span style="color: blue; font-weight: bold">def </span>getStates<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: darkred">"""
+        Return list of all states.
+        """
+        </span>states <span style="font-weight: bold">= [</span>t<span style="font-weight: bold">.</span>s1 <span style="color: blue; font-weight: bold">for </span>t <span style="color: blue; font-weight: bold">in </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>transitions<span style="font-weight: bold">]
+        </span><span style="color: blue; font-weight: bold">return </span>list<span style="font-weight: bold">(</span>set<span style="font-weight: bold">(</span>states<span style="font-weight: bold">))
+
+    </span><span style="color: blue; font-weight: bold">def </span>getReward<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>state<span style="font-weight: bold">, </span>action<span style="font-weight: bold">, </span>nextState<span style="font-weight: bold">):
+        </span><span style="color: darkred">"""
+        Get reward for state, action, nextState transition.
+
+        Note that the reward depends only on the state being
+        departed (as in the R+N book examples, which more or
+        less use this convention).
+        """
+        </span>matches <span style="font-weight: bold">= [</span>t <span style="color: blue; font-weight: bold">for </span>t <span style="color: blue; font-weight: bold">in </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>transitions <span style="color: blue; font-weight: bold">if </span>t<span style="font-weight: bold">.</span>s1 <span style="font-weight: bold">== </span>state <span style="color: blue; font-weight: bold">and </span>t<span style="font-weight: bold">.</span>a <span style="font-weight: bold">== </span>action <span style="color: blue; font-weight: bold">and </span>t<span style="font-weight: bold">.</span>s2 <span style="font-weight: bold">== </span>nextState<span style="font-weight: bold">]
+        </span><span style="color: blue; font-weight: bold">if </span>len<span style="font-weight: bold">(</span>matches<span style="font-weight: bold">) == </span><span style="color: red">1</span><span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">return </span>matches<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">].</span>reward
+        <span style="color: blue; font-weight: bold">else</span><span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">raise </span><span style="color: red">"no such transition!"
+
+    </span><span style="color: blue; font-weight: bold">def </span>getStartState<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>startstate
+
+    <span style="color: blue; font-weight: bold">def </span>isTerminal<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>state<span style="font-weight: bold">):
+        </span><span style="color: darkred">"""
+        Hmm - is this important for Hardcoded MDPs?
+
+        Only the TERMINAL_STATE state is *actually* a terminal state.
+        The other "exit" states are technically non-terminals with
+        a single action "exit" which leads to the true terminal state.
+        This convention is to make the grids line up with the examples
+        in the R+N textbook.
+        """
+        </span><span style="color: blue; font-weight: bold">return </span><span style="font-weight: bold">[] == [</span>t<span style="font-weight: bold">.</span>s1 <span style="color: blue; font-weight: bold">for </span>t <span style="color: blue; font-weight: bold">in </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>transitions <span style="color: blue; font-weight: bold">if </span>t<span style="font-weight: bold">.</span>s1 <span style="font-weight: bold">== </span>state<span style="font-weight: bold">]
+
+
+    </span><span style="color: blue; font-weight: bold">def </span>getTransitionStatesAndProbs<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>state<span style="font-weight: bold">, </span>action<span style="font-weight: bold">):
+        </span><span style="color: darkred">"""
+        Returns list of (nextState, prob) pairs
+        representing the states reachable
+        from 'state' by taking 'action' along
+        with their transition probabilities.
+        """
+
+        </span>matches <span style="font-weight: bold">= [(</span>t<span style="font-weight: bold">.</span>s2<span style="font-weight: bold">, </span>t<span style="font-weight: bold">.</span>probability<span style="font-weight: bold">) </span><span style="color: blue; font-weight: bold">for </span>t <span style="color: blue; font-weight: bold">in </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>transitions <span style="color: blue; font-weight: bold">if </span>t<span style="font-weight: bold">.</span>s1 <span style="font-weight: bold">== </span>state <span style="color: blue; font-weight: bold">and </span>t<span style="font-weight: bold">.</span>a <span style="font-weight: bold">== </span>action<span style="font-weight: bold">]
+
+        </span><span style="color: blue; font-weight: bold">return </span>matches
+
+<span style="color: blue; font-weight: bold">class </span>HardcodedEnvironment<span style="font-weight: bold">(</span>environment<span style="font-weight: bold">.</span>Environment<span style="font-weight: bold">):
+
+    </span><span style="color: blue; font-weight: bold">def </span>__init__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>mdp<span style="font-weight: bold">):
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>mdp <span style="font-weight: bold">= </span>mdp
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>reset<span style="font-weight: bold">()
+
+    </span><span style="color: blue; font-weight: bold">def </span>getCurrentState<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>state
+
+    <span style="color: blue; font-weight: bold">def </span>getPossibleActions<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>state<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>mdp<span style="font-weight: bold">.</span>getPossibleActions<span style="font-weight: bold">(</span>state<span style="font-weight: bold">)
+
+    </span><span style="color: blue; font-weight: bold">def </span>doAction<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>action<span style="font-weight: bold">):
+        </span>successors <span style="font-weight: bold">= </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>mdp<span style="font-weight: bold">.</span>getTransitionStatesAndProbs<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">.</span>state<span style="font-weight: bold">, </span>action<span style="font-weight: bold">)
+        </span>sum <span style="font-weight: bold">= </span><span style="color: red">0.0
+        </span>rand <span style="font-weight: bold">= </span>random<span style="font-weight: bold">.</span>random<span style="font-weight: bold">()
+        </span>state <span style="font-weight: bold">= </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>getCurrentState<span style="font-weight: bold">()
+        </span><span style="color: blue; font-weight: bold">for </span>nextState<span style="font-weight: bold">, </span>prob <span style="color: blue; font-weight: bold">in </span>successors<span style="font-weight: bold">:
+            </span>sum <span style="font-weight: bold">+= </span>prob
+            <span style="color: blue; font-weight: bold">if </span>sum <span style="font-weight: bold">&gt; </span><span style="color: red">1.0</span><span style="font-weight: bold">:
+                </span><span style="color: blue; font-weight: bold">raise </span><span style="color: red">'Total transition probability more than one; sample failure.'
+            </span><span style="color: blue; font-weight: bold">if </span>rand <span style="font-weight: bold">&lt; </span>sum<span style="font-weight: bold">:
+                </span>reward <span style="font-weight: bold">= </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>mdp<span style="font-weight: bold">.</span>getReward<span style="font-weight: bold">(</span>state<span style="font-weight: bold">, </span>action<span style="font-weight: bold">, </span>nextState<span style="font-weight: bold">)
+                </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>state <span style="font-weight: bold">= </span>nextState
+                <span style="color: blue; font-weight: bold">return </span><span style="font-weight: bold">(</span>nextState<span style="font-weight: bold">, </span>reward<span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">raise </span><span style="color: red">'Total transition probability less than one; sample failure.'
+
+    </span><span style="color: blue; font-weight: bold">def </span>reset<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>state <span style="font-weight: bold">= </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>mdp<span style="font-weight: bold">.</span>getStartState<span style="font-weight: bold">()
+
+</span>EXAMPLE_MDP <span style="font-weight: bold">= [
+  </span>T<span style="font-weight: bold">(</span><span style="color: red">"R"</span><span style="font-weight: bold">, </span><span style="color: red">"dump"</span><span style="font-weight: bold">, </span><span style="color: red">"lose"</span><span style="font-weight: bold">, </span><span style="color: red">0.5</span><span style="font-weight: bold">),
+  </span>T<span style="font-weight: bold">(</span><span style="color: red">"R"</span><span style="font-weight: bold">, </span><span style="color: red">"dump"</span><span style="font-weight: bold">, </span><span style="color: red">"win"</span><span style="font-weight: bold">, </span><span style="color: red">0.5</span><span style="font-weight: bold">, </span>reward <span style="font-weight: bold">= </span><span style="color: red">1.0</span><span style="font-weight: bold">),
+  </span>T<span style="font-weight: bold">(</span><span style="color: red">"R"</span><span style="font-weight: bold">, </span><span style="color: red">"setup"</span><span style="font-weight: bold">, </span><span style="color: red">"lose"</span><span style="font-weight: bold">, </span><span style="color: red">0.25</span><span style="font-weight: bold">),
+  </span>T<span style="font-weight: bold">(</span><span style="color: red">"R"</span><span style="font-weight: bold">, </span><span style="color: red">"setup"</span><span style="font-weight: bold">, </span><span style="color: red">"setup"</span><span style="font-weight: bold">, </span><span style="color: red">0.75</span><span style="font-weight: bold">),
+  </span>T<span style="font-weight: bold">(</span><span style="color: red">"setup"</span><span style="font-weight: bold">, </span><span style="color: red">"spike"</span><span style="font-weight: bold">, </span><span style="color: red">"lose"</span><span style="font-weight: bold">, </span><span style="color: red">0.5</span><span style="font-weight: bold">),
+  </span>T<span style="font-weight: bold">(</span><span style="color: red">"setup"</span><span style="font-weight: bold">, </span><span style="color: red">"spike"</span><span style="font-weight: bold">, </span><span style="color: red">"win"</span><span style="font-weight: bold">, </span><span style="color: red">0.5</span><span style="font-weight: bold">, </span>reward <span style="font-weight: bold">= </span><span style="color: red">1.0</span><span style="font-weight: bold">),
+  </span>T<span style="font-weight: bold">(</span><span style="color: red">"setup"</span><span style="font-weight: bold">, </span><span style="color: red">"dump"</span><span style="font-weight: bold">, </span><span style="color: red">"win"</span><span style="font-weight: bold">, </span><span style="color: red">1.0</span><span style="font-weight: bold">/</span><span style="color: red">3</span><span style="font-weight: bold">, </span>reward <span style="font-weight: bold">= </span><span style="color: red">1.0</span><span style="font-weight: bold">),
+  </span>T<span style="font-weight: bold">(</span><span style="color: red">"setup"</span><span style="font-weight: bold">, </span><span style="color: red">"dump"</span><span style="font-weight: bold">, </span><span style="color: red">"R"</span><span style="font-weight: bold">, </span><span style="color: red">2.0</span><span style="font-weight: bold">/</span><span style="color: red">3</span><span style="font-weight: bold">, </span>reward<span style="font-weight: bold">=</span><span style="color: red">0.0</span><span style="font-weight: bold">)
+]
+</span>
+    </pre>
+    </body>
+    </html>
+    
