@@ -36,8 +36,10 @@ class QLearningAgent(ReinforcementAgent):
     def __init__(self, **args):
         "You can initialize Q-values here..."
         ReinforcementAgent.__init__(self, **args)
-
-        "*** YOUR CODE HERE ***"
+        
+        self.values = util.Counter()
+        self.terminals = util.Counter()
+        
 
     def getQValue(self, state, action):
         """
@@ -45,8 +47,11 @@ class QLearningAgent(ReinforcementAgent):
           Should return 0.0 if we never seen
           a state or (state,action) tuple
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        if self.values[state] == 0:
+            return 0
+
+        return self.values[state][action]
 
 
     def getValue(self, state):
@@ -56,8 +61,22 @@ class QLearningAgent(ReinforcementAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return a value of 0.0.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        actions = self.getLegalActions(state)
+        
+        if self.values[state] == 0:
+                self.values[state] = util.Counter()
+        
+        maxValue = self.values[state][actions[0]]
+        for action in actions:
+            if self.values[state] == 0:
+                self.values[state] = util.Counter()
+            
+            if self.values[state][action] >= maxValue:
+                maxValue = self.values[state][action]
+                
+        return maxValue * self.discount
+
 
     def getPolicy(self, state):
         """
@@ -65,8 +84,8 @@ class QLearningAgent(ReinforcementAgent):
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
+
 
     def getAction(self, state):
         """
@@ -96,8 +115,18 @@ class QLearningAgent(ReinforcementAgent):
           NOTE: You should never call this function,
           it will be called on your behalf
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        if self.values[state] == 0:
+            self.values[state] = util.Counter()
+        
+        if nextState == "TERMINAL_STATE":
+            self.values[state] = util.Counter()
+            self.values[state][action] = reward
+            return
+        
+        new = self.getValue(nextState)
+        old = self.values[state][action]
+        self.values[state][action] = new * self.alpha + old * (1 - self.alpha)
 
 class PacmanQAgent(QLearningAgent):
     "Exactly the same as QLearningAgent, but with different default parameters"
