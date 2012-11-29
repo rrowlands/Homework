@@ -35,13 +35,46 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.discount = discount
         self.iterations = iterations
         self.values = util.Counter() # A Counter is a dict with default 0
-        self.iter = 0
+        self.previousValues = util.Counter()
         
         states = mdp.getStates()
         
-        for state in states:
-            if (mdp.isTerminal(state)):
-                self.values[state] = mdp.getReward(state)
+        for i in range(iterations):
+            self.previousValues = self.values
+            
+            for state in states:
+                reward = mdp.getReward(state, None, None)
+                if reward != 0:
+                    #self.values[state] = reward
+                    self.previousValues[state] = reward
+                    
+                posActions = mdp.getPossibleActions(state)
+                
+                #DEBUG
+                if i == 3 and state == (3,0):
+                    print "state = " + str(state) + ""
+                
+                actionValue = 0
+                for action in posActions:
+                    # if action = north from (0,0), returns:
+                    # list: [((0, 1), 0.80000000000000004), ((1, 0), 0.10000000000000001), ((0, 0), 0.10000000000000001)]
+                    transStates = mdp.getTransitionStatesAndProbs(state, action)
+                    
+                    tempActionValue = 0
+                    for trans in transStates:
+                        tempActionValue = tempActionValue + self.previousValues[trans[0]] * trans[1] * discount
+                        
+                    if tempActionValue > actionValue:
+                        actionValue = tempActionValue
+                        
+                if reward != 0:
+                    actionValue = reward
+                    
+                #DEBUG
+                if i == 3 and state == (2,0):
+                    print "state = " + str(state) + ""
+                    
+                self.values[state] = actionValue
         
 
     def getValue(self, state):
@@ -61,8 +94,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           to derive it on the fly.
         """
         "*** YOUR CODE HERE ***"
-        #util.raiseNotDefined()
-        return .01
+        util.raiseNotDefined()
         
 
     def getPolicy(self, state):
@@ -74,10 +106,23 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        #util.raiseNotDefined()
-        self.iter = self.iter + 1
-        print self.iter
-        return "south"
+        
+        posActions = self.mdp.getPossibleActions(state)
+        
+        actionValue = 0
+        direction = None
+        for action in posActions:
+            transStates = self.mdp.getTransitionStatesAndProbs(state, action)
+            
+            tempActionValue = 0
+            for trans in transStates:
+                tempActionValue = tempActionValue + self.values[trans[0]] * trans[1] * self.discount
+            
+            if tempActionValue > actionValue:
+                actionValue = tempActionValue
+                direction = action
+        
+        return direction
 
     def getAction(self, state):
         "Returns the policy at the state (no exploration)."
