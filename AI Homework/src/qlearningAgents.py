@@ -86,8 +86,24 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         
-        #directions = {}
-        #directions[self.values[state].keys()[0]] = self.values[state].values()[0]
+        actions = self.getLegalActions(state)
+        
+        # There are no legal actions
+        if len(actions) == 0:
+            return None
+        
+        # There is only 1 legal action
+        if len(actions) == 1:
+            return actions[0]
+        
+        # We've never been at this state before, we have no idea which move is best
+        if self.values[state] == 0:
+            self.values[state] = util.Counter()
+            
+            randy = randrange(0, len(actions)-1)
+            return actions[randy]
+        
+        # We have data about this state, pick the move with the max value
         maxValue = self.values[state].values()[0]
         directions = []
         for action in self.values[state]:
@@ -97,7 +113,10 @@ class QLearningAgent(ReinforcementAgent):
                 maxValue = self.values[state][action]
                 directions = [action]
         
-        randy = randrange(1, len(directions))
+        if len(directions) == 1:
+            return directions[0]
+        
+        randy = randrange(0, len(directions)-1)
         return directions[randy]
 
 
