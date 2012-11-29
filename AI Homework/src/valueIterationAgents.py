@@ -9,6 +9,7 @@
 import mdp, util
 
 from learningAgents import ValueEstimationAgent
+from copy import deepcopy
 
 class ValueIterationAgent(ValueEstimationAgent):
     """
@@ -40,7 +41,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         states = mdp.getStates()
         
         for i in range(iterations):
-            self.previousValues = self.values
+            self.previousValues = deepcopy(self.values)
             
             for state in states:
                 reward = mdp.getReward(state, None, None)
@@ -49,10 +50,6 @@ class ValueIterationAgent(ValueEstimationAgent):
                     self.previousValues[state] = reward
                     
                 posActions = mdp.getPossibleActions(state)
-                
-                #DEBUG
-                if i == 3 and state == (3,0):
-                    print "state = " + str(state) + ""
                 
                 actionValue = 0
                 for action in posActions:
@@ -69,10 +66,6 @@ class ValueIterationAgent(ValueEstimationAgent):
                         
                 if reward != 0:
                     actionValue = reward
-                    
-                #DEBUG
-                if i == 3 and state == (2,0):
-                    print "state = " + str(state) + ""
                     
                 self.values[state] = actionValue
         
