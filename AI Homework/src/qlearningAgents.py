@@ -135,7 +135,10 @@ class QLearningAgent(ReinforcementAgent):
         legalActions = self.getLegalActions(state)
         action = None
         
-        #random = util.flip
+        randy = random.random()
+        
+        if randy < self.epsilon:
+            return random.choice(legalActions)
         
         action = self.getPolicy(state)
 
@@ -154,14 +157,15 @@ class QLearningAgent(ReinforcementAgent):
         if self.values[state] == 0:
             self.values[state] = util.Counter()
         
-        if nextState == "TERMINAL_STATE":
+        # if is the terminal state
+        if len(self.getLegalActions(nextState)) == 0:
             self.values[state] = util.Counter()
             self.values[state][action] = reward
             return
-        
+
         new = self.getValue(nextState)
         old = self.values[state][action]
-        self.values[state][action] = new * self.alpha + old * (1 - self.alpha)
+        self.values[state][action] = new * (1 - self.alpha) + old * self.alpha + reward
 
 class PacmanQAgent(QLearningAgent):
     "Exactly the same as QLearningAgent, but with different default parameters"
