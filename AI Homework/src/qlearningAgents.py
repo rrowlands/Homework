@@ -11,6 +11,7 @@ from learningAgents import ReinforcementAgent
 from featureExtractors import *
 
 import random,util,math
+from random import randrange
 
 class QLearningAgent(ReinforcementAgent):
     """
@@ -84,7 +85,20 @@ class QLearningAgent(ReinforcementAgent):
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        util.raiseNotDefined()
+        
+        #directions = {}
+        #directions[self.values[state].keys()[0]] = self.values[state].values()[0]
+        maxValue = self.values[state].values()[0]
+        directions = []
+        for action in self.values[state]:
+            if self.values[state][action] == maxValue:
+                directions.append(action)
+            elif self.values[state][action] > maxValue:
+                maxValue = self.values[state][action]
+                directions = [action]
+        
+        randy = randrange(1, len(directions))
+        return directions[randy]
 
 
     def getAction(self, state):
@@ -101,8 +115,10 @@ class QLearningAgent(ReinforcementAgent):
         # Pick Action
         legalActions = self.getLegalActions(state)
         action = None
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        #random = util.flip
+        
+        action = self.getPolicy(state)
 
         return action
 
