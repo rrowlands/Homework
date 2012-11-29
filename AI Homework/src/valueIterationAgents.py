@@ -35,8 +35,14 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.discount = discount
         self.iterations = iterations
         self.values = util.Counter() # A Counter is a dict with default 0
-
-        "*** YOUR CODE HERE ***"
+        self.iter = 0
+        
+        states = mdp.getStates()
+        
+        for state in states:
+            if (mdp.isTerminal(state)):
+                self.values[state] = mdp.getReward(state)
+        
 
     def getValue(self, state):
         """
@@ -55,7 +61,9 @@ class ValueIterationAgent(ValueEstimationAgent):
           to derive it on the fly.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+        return .01
+        
 
     def getPolicy(self, state):
         """
@@ -66,7 +74,10 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+        self.iter = self.iter + 1
+        print self.iter
+        return "south"
 
     def getAction(self, state):
         "Returns the policy at the state (no exploration)."
