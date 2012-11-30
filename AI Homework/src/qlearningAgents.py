@@ -39,7 +39,6 @@ class QLearningAgent(ReinforcementAgent):
         ReinforcementAgent.__init__(self, **args)
         
         self.values = util.Counter()
-        self.terminals = util.Counter()
         
 
     def getQValue(self, state, action):
@@ -49,10 +48,7 @@ class QLearningAgent(ReinforcementAgent):
           a state or (state,action) tuple
         """
         
-        if self.values[state] == 0:
-            return 0
-
-        return self.values[state][action]
+        return self.values[state, action]
 
 
     def getValue(self, state):
@@ -65,16 +61,16 @@ class QLearningAgent(ReinforcementAgent):
         
         actions = self.getLegalActions(state)
         
-        if self.values[state] == 0:
-                self.values[state] = util.Counter()
+        # There are no legal actions
+        if len(actions) == 0:
+            return 0
         
-        maxValue = self.values[state][actions[0]]
+        maxValue = self.getQValue(state, actions[0])
         for action in actions:
-            if self.values[state] == 0:
-                self.values[state] = util.Counter()
             
-            if self.values[state][action] >= maxValue:
-                maxValue = self.values[state][action]
+            qValue = self.getQValue(state, action)
+            if qValue >= maxValue:
+                maxValue = qValue
                 
         return maxValue * self.discount
 
@@ -97,27 +93,27 @@ class QLearningAgent(ReinforcementAgent):
             return actions[0]
         
         # We've never been at this state before, we have no idea which move is best
+        """
         if self.values[state] == 0:
             self.values[state] = util.Counter()
             
             randy = randrange(0, len(actions)-1)
             return actions[randy]
+        """
         
         # We have data about this state, pick the move with the max value
-        maxValue = self.values[state].values()[0]
+        maxValue = self.getQValue(state, actions[0])
         directions = []
-        for action in self.values[state]:
-            if self.values[state][action] == maxValue:
+        for action in actions:
+            
+            qValue = self.getQValue(state, action)
+            if qValue == maxValue:
                 directions.append(action)
-            elif self.values[state][action] > maxValue:
-                maxValue = self.values[state][action]
+            elif qValue > maxValue:
+                maxValue = qValue
                 directions = [action]
         
-        if len(directions) == 1:
-            return directions[0]
-        
-        randy = randrange(0, len(directions)-1)
-        return directions[randy]
+        return random.choice(directions)
 
 
     def getAction(self, state):
@@ -133,8 +129,7 @@ class QLearningAgent(ReinforcementAgent):
         """
         # Pick Action
         legalActions = self.getLegalActions(state)
-        action = None
-        
+
         randy = random.random()
         
         if randy < self.epsilon:
@@ -154,18 +149,15 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         
-        if self.values[state] == 0:
-            self.values[state] = util.Counter()
-        
         # if is the terminal state
         if len(self.getLegalActions(nextState)) == 0:
-            self.values[state] = util.Counter()
-            self.values[state][action] = reward
+            self.values[state, action] = reward
             return
+        
 
         new = self.getValue(nextState)
-        old = self.values[state][action]
-        self.values[state][action] = new * (1 - self.alpha) + old * self.alpha + reward
+        old = self.getQValue(state, action)
+        self.values[state, action] = new * (1 - self.alpha) + old * self.alpha + reward
 
 class PacmanQAgent(QLearningAgent):
     "Exactly the same as QLearningAgent, but with different default parameters"
