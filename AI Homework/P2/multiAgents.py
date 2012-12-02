@@ -10,6 +10,7 @@ from util import manhattanDistance
 from game import Directions
 import random, util
 
+
 from game import Agent
 
 class ReflexAgent(Agent):
@@ -61,6 +62,7 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
+        """
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
         oldFood = currentGameState.getFood()
@@ -69,6 +71,142 @@ class ReflexAgent(Agent):
 
         "*** YOUR CODE HERE ***"
         return successorGameState.getScore()
+        """
+        
+        oldFood = currentGameState.getFood()
+        oldCapsules = currentGameState.getCapsules()
+        successorGameState = currentGameState.generatePacmanSuccessor(action)
+        oldPos = currentGameState.getPacmanPosition()
+        newPos = successorGameState.getPacmanPosition()
+        newGhostStates = successorGameState.getGhostStates()
+        newGhostPoses = successorGameState.getGhostPositions()
+        newFoodGrid = successorGameState.getFood()
+        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        
+        moveValue = 0
+        
+        # Randomness to stop us from getting stuck
+        isRandom = random.randint(0, 100)
+        
+        if isRandom > 92:
+            moveValue = moveValue + random.randint(-5000, 5000)
+        
+        
+        # Run away from ghosts
+        for ghost in newGhostStates:
+            if ghost.scaredTimer == 0 and manhattanDistance(newPos, ghost.getPosition()) <= 1:
+                moveValue = -10000000000000
+        
+        # Don't move into a wall
+        if newPos == oldPos:
+            moveValue = moveValue + -1000000
+        
+        # This move eats food. Do it.
+        if oldFood[newPos[0]][newPos[1]]:
+            moveValue = moveValue + 1000
+        for capsule in oldCapsules:
+            if capsule == newPos:
+                moveValue = moveValue + 1000
+        for ghost in newGhostStates:
+            if ghost.scaredTimer != 0 and ghost.getPosition() == newPos:
+                moveValue = moveValue + 2000
+        
+        # Don't move backwards
+        """
+        if hasattr(self, "lastMove"):
+            if self.lastMove == "West" and action == "East":
+                return -1000
+            elif self.lastMove == "East" and action == "West":
+                return -1000
+            elif self.lastMove == "North" and action == "South":
+                return -1000
+            elif self.lastMove == "South" and action == "North":
+                return -1000
+        """
+        
+        # Eat dat food
+        closestFood = 1000.0
+        for foodPos in newFoodGrid.asList():
+            closestFood = float(min(manhattanDistance(newPos, foodPos), closestFood))
+        
+        moveValue = moveValue + 1.0 / closestFood
+        
+        # Dem Capsules
+        closestFood = 1000.0
+        capsules = successorGameState.getCapsules()
+        for capPos in capsules:
+            closestFood = float(min(manhattanDistance(newPos, capPos), closestFood) - 1.1)
+        
+        moveValue = moveValue + 1.0 / closestFood
+        
+        # Dem Skurrd Ghostz
+        closestFood = 1000.0
+        isEatableGhost = 0
+        for ghost in newGhostStates:
+            dist = manhattanDistance(newPos, ghost.getPosition())
+            if ghost.scaredTimer > dist:
+                closestFood = float(dist) / 2000.0
+                isEatableGhost = 1
+        
+        if isEatableGhost == 1:
+            moveValue = moveValue + 1.0 / closestFood
+            
+        """
+        if not hasattr(self, "moves"):
+            self.moves = {}
+        
+        if action in self.moves:
+            self.lastMove = self.moves[action]
+            maxi = -1000000000
+            for move in self.moves:
+                if self.moves[move] >= maxi:
+                    maxi = self.moves[move]
+                    self.lastMove = move
+                    
+            self.moves = {}
+        
+        self.moves[action] = moveValue
+        """
+
+        return moveValue
+        
+#        #Current information
+#        currentFoodGrid = currentGameState.getFood()
+#        width = currentFoodGrid.width
+#        height = currentFoodGrid.height
+#    
+#        #Successor information
+#        successorGameState = currentGameState.generatePacmanSuccessor(action)
+#        newGhostPositions = successorGameState.getGhostPositions()
+#        newPosition = successorGameState.getPacmanPosition()
+#        newFoodGrid = successorGameState.getFood()
+#        capsules = successorGameState.getCapsules()
+#        #Unimplemented
+#        
+#        newGhostStates = successorGameState.getGhostStates()
+#        oldGhostStates = currentGameState.getGhostStates()
+#        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        
+        
+        #Distance to closest ghost
+#        closestGhost = width + height
+#        for ghostPosition in newGhostPositions:
+#          closestGhost = min(manhattanDistance(newPosition, ghostPosition), closestGhost)
+#        closestGhost += 1
+#        
+#        #Distance to closest food
+#        closestFood = width + height
+#        for food in newFoodGrid.asList():
+#          closestFood = min(manhattanDistance(newPosition, food), closestFood)
+#    
+#        returnValue = 0
+#        #This prevents pacman from dying
+#        if closestGhost < 3:
+#          returnValue = -10000
+#        returnValue += 1.0 / closestFood
+#        if currentFoodGrid[newPosition[0]][newPosition[1]]:
+#          returnValue += 10
+#        return returnValue
 
 def scoreEvaluationFunction(currentGameState):
     """
