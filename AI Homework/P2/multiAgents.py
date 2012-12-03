@@ -241,7 +241,16 @@ class MinimaxAgent(MultiAgentSearchAgent):
                         else:
                             minMaxScore = min(self.evaluationFunction(gameState.generateSuccessor(agent, action)), minMaxScore)
                 else:
-                    minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                    if agent == 0:
+                        if minMaxScore == None:
+                            minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                        else:
+                            minMaxScore = max(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent), minMaxScore)
+                    else:
+                        if minMaxScore == None:
+                            minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                        else:
+                            minMaxScore = min(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent), minMaxScore)
                 
 #                tabs = "  " * (self.depth - depthNum + 1)
 #                self.debugOut = tabs + "agent = " + str(agent) + "; action = " + str(action) + "; value = " + str(minMaxScore) + "\n" + self.debugOut
@@ -311,7 +320,16 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                         else:
                             minMaxScore = min(self.evaluationFunction(gameState.generateSuccessor(agent, action)), minMaxScore)
                 else:
-                    minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                    if agent == 0:
+                        if minMaxScore == None:
+                            minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                        else:
+                            minMaxScore = max(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent), minMaxScore)
+                    else:
+                        if minMaxScore == None:
+                            minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                        else:
+                            minMaxScore = min(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent), minMaxScore)
                 
 #                tabs = "  " * (self.depth - depthNum + 1)
 #                self.debugOut = tabs + "agent = " + str(agent) + "; action = " + str(action) + "; value = " + str(minMaxScore) + "\n" + self.debugOut
@@ -336,8 +354,82 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           All ghosts should be modeled as choosing uniformly at random from their
           legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        legalActions = gameState.getLegalActions(0)
+        
+        self.debugOut = ""
+        
+        maxScore = None
+        retAction = None
+        for action in legalActions:
+            if action != "Stop":
+                value = self.recursiveGetValue(gameState.generateSuccessor(0, action), self.depth, 0)
+                
+#                print "agent = 0; action = " + action + "; value = " + str(value)
+#                print self.debugOut
+#                self.debugOut = ""
+                
+                if maxScore == None or value >= maxScore:
+                    maxScore = value
+                    retAction = action
+        
+        return retAction
+            
+    
+    def recursiveGetValue(self, gameState, depthNum, agent):
+        numAgents = gameState.getNumAgents()
+        agent = agent + 1
+        if agent == numAgents:
+            agent = 0
+            depthNum = depthNum - 1
+        
+        legalActions = gameState.getLegalActions(agent)
+        
+        if "Stop" in legalActions:
+            legalActions.remove("Stop")
+        
+        minMaxScore = None
+        
+        for action in legalActions:
+            if depthNum == 1 and agent == numAgents - 1:
+                if agent == 0:
+                    if minMaxScore == None:
+                        minMaxScore = self.evaluationFunction(gameState.generateSuccessor(agent, action))
+                    else:
+                        minMaxScore = max(self.evaluationFunction(gameState.generateSuccessor(agent, action)), minMaxScore)
+                else:
+                    if minMaxScore == None:
+                        minMaxScore = self.evaluationFunction(gameState.generateSuccessor(agent, action))
+                    else:
+                        minMaxScore = minMaxScore + self.evaluationFunction(gameState.generateSuccessor(agent, action))
+            else:
+                if agent == 0:
+                    if minMaxScore == None:
+                        minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                    else:
+                        minMaxScore = max(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent), minMaxScore)
+                else:
+                    value = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                    
+                    if minMaxScore == None:
+                        minMaxScore = 0
+                    
+                    minMaxScore = minMaxScore + value
+            
+#                tabs = "  " * (self.depth - depthNum + 1)
+#                self.debugOut = tabs + "agent = " + str(agent) + "; action = " + str(action) + "; value = " + str(minMaxScore) + "\n" + self.debugOut
+        
+        if minMaxScore == None:
+            value = self.evaluationFunction(gameState)
+#            tabs = "  " * (self.depth - depthNum + 1)
+#            self.debugOut = tabs + "agent = " + str(agent) + "; No legal Moves" + "; value = " + str(value) + "\n" + self.debugOut
+            
+            return value
+        
+        if agent != 0 and len(legalActions) != 1:
+            minMaxScore = float(minMaxScore) / float(len(legalActions))
+        
+        return minMaxScore
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -346,32 +438,25 @@ def betterEvaluationFunction(currentGameState):
 
       DESCRIPTION: <write something here so we know what you did>
     """
-    oldFood = currentGameState.getFood()
-    oldCapsules = currentGameState.getCapsules()
-    successorGameState = currentGameState.generatePacmanSuccessor(action)
-    oldPos = currentGameState.getPacmanPosition()
-    newPos = successorGameState.getPacmanPosition()
-    newGhostStates = successorGameState.getGhostStates()
-    newFoodGrid = successorGameState.getFood()
+    food = currentGameState.getFood()
+    capsules = currentGameState.getCapsules()
+    pos = currentGameState.getPacmanPosition()
+    ghosts = currentGameState.getGhostStates()
     
     moveValue = 0
     
     # Randomness to stop us from getting stuck
-    isRandom = random.randint(0, 100)
+#    isRandom = random.randint(0, 100)
     
-    if isRandom > 92:
-        moveValue = moveValue + random.randint(-5000, 5000)
+#    if isRandom > 92:
+#        moveValue = moveValue + random.randint(-5000, 5000)
     
     
     # Run away from ghosts
-    for ghost in newGhostStates:
-        if ghost.scaredTimer == 0 and manhattanDistance(newPos, ghost.getPosition()) <= 1:
+    for ghost in ghosts:
+        if ghost.scaredTimer == 0 and pos == ghost.getPosition():
             moveValue = -10000000000000
-    
-    # Don't move into a wall
-    if newPos == oldPos:
-        moveValue = moveValue + -1000000
-    
+    """
     # This move eats food. Do it.
     if oldFood[newPos[0]][newPos[1]]:
         moveValue = moveValue + 1000
@@ -408,7 +493,7 @@ def betterEvaluationFunction(currentGameState):
     
     if isEatableGhost == 1:
         moveValue = moveValue + 1.0 / closestFood
-
+    """
     return moveValue
 
 # Abbreviation
