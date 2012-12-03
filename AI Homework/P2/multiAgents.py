@@ -8,7 +8,7 @@
 
 from util import manhattanDistance
 from game import Directions
-import random, util
+import random, util, sys
 
 
 from game import Agent
@@ -79,9 +79,7 @@ class ReflexAgent(Agent):
         oldPos = currentGameState.getPacmanPosition()
         newPos = successorGameState.getPacmanPosition()
         newGhostStates = successorGameState.getGhostStates()
-        newGhostPoses = successorGameState.getGhostPositions()
         newFoodGrid = successorGameState.getFood()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
         
         moveValue = 0
         
@@ -110,20 +108,7 @@ class ReflexAgent(Agent):
         for ghost in newGhostStates:
             if ghost.scaredTimer != 0 and ghost.getPosition() == newPos:
                 moveValue = moveValue + 2000
-        
-        # Don't move backwards
-        """
-        if hasattr(self, "lastMove"):
-            if self.lastMove == "West" and action == "East":
-                return -1000
-            elif self.lastMove == "East" and action == "West":
-                return -1000
-            elif self.lastMove == "North" and action == "South":
-                return -1000
-            elif self.lastMove == "South" and action == "North":
-                return -1000
-        """
-        
+                
         # Eat dat food
         closestFood = 1000.0
         for foodPos in newFoodGrid.asList():
@@ -150,63 +135,8 @@ class ReflexAgent(Agent):
         
         if isEatableGhost == 1:
             moveValue = moveValue + 1.0 / closestFood
-            
-        """
-        if not hasattr(self, "moves"):
-            self.moves = {}
-        
-        if action in self.moves:
-            self.lastMove = self.moves[action]
-            maxi = -1000000000
-            for move in self.moves:
-                if self.moves[move] >= maxi:
-                    maxi = self.moves[move]
-                    self.lastMove = move
-                    
-            self.moves = {}
-        
-        self.moves[action] = moveValue
-        """
 
         return moveValue
-        
-#        #Current information
-#        currentFoodGrid = currentGameState.getFood()
-#        width = currentFoodGrid.width
-#        height = currentFoodGrid.height
-#    
-#        #Successor information
-#        successorGameState = currentGameState.generatePacmanSuccessor(action)
-#        newGhostPositions = successorGameState.getGhostPositions()
-#        newPosition = successorGameState.getPacmanPosition()
-#        newFoodGrid = successorGameState.getFood()
-#        capsules = successorGameState.getCapsules()
-#        #Unimplemented
-#        
-#        newGhostStates = successorGameState.getGhostStates()
-#        oldGhostStates = currentGameState.getGhostStates()
-#        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
-        
-        
-        #Distance to closest ghost
-#        closestGhost = width + height
-#        for ghostPosition in newGhostPositions:
-#          closestGhost = min(manhattanDistance(newPosition, ghostPosition), closestGhost)
-#        closestGhost += 1
-#        
-#        #Distance to closest food
-#        closestFood = width + height
-#        for food in newFoodGrid.asList():
-#          closestFood = min(manhattanDistance(newPosition, food), closestFood)
-#    
-#        returnValue = 0
-#        #This prevents pacman from dying
-#        if closestGhost < 3:
-#          returnValue = -10000
-#        returnValue += 1.0 / closestFood
-#        if currentFoodGrid[newPosition[0]][newPosition[1]]:
-#          returnValue += 10
-#        return returnValue
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -264,7 +194,66 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        legalActions = gameState.getLegalActions(0)
+        
+        self.debugOut = ""
+        
+        maxScore = None
+        retAction = None
+        for action in legalActions:
+            if action != "Stop":
+                value = self.recursiveGetValue(gameState.generateSuccessor(0, action), self.depth, 0)
+                
+#                print "agent = 0; action = " + action + "; value = " + str(value)
+#                print self.debugOut
+#                self.debugOut = ""
+                
+                if maxScore == None or value >= maxScore:
+                    maxScore = value
+                    retAction = action
+        
+        return retAction
+            
+    
+    def recursiveGetValue(self, gameState, depthNum, agent):
+        numAgents = gameState.getNumAgents()
+        agent = agent + 1
+        if agent == numAgents:
+            agent = 0
+            depthNum = depthNum - 1
+        
+        legalActions = gameState.getLegalActions(agent)
+        
+        minMaxScore = None
+        
+        for action in legalActions:
+            if action != "Stop":
+                if depthNum == 1 and agent == numAgents - 1:
+                    if agent == 0:
+                        if minMaxScore == None:
+                            minMaxScore = self.evaluationFunction(gameState.generateSuccessor(agent, action))
+                        else:
+                            minMaxScore = max(self.evaluationFunction(gameState.generateSuccessor(agent, action)), minMaxScore)
+                    else:
+                        if minMaxScore == None:
+                            minMaxScore = self.evaluationFunction(gameState.generateSuccessor(agent, action))
+                        else:
+                            minMaxScore = min(self.evaluationFunction(gameState.generateSuccessor(agent, action)), minMaxScore)
+                else:
+                    minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                
+#                tabs = "  " * (self.depth - depthNum + 1)
+#                self.debugOut = tabs + "agent = " + str(agent) + "; action = " + str(action) + "; value = " + str(minMaxScore) + "\n" + self.debugOut
+        
+        if minMaxScore == None:
+            value = self.evaluationFunction(gameState)
+#            tabs = "  " * (self.depth - depthNum + 1)
+#            self.debugOut = tabs + "agent = " + str(agent) + "; No legal Moves\n" + self.debugOut
+            return value
+        
+        return minMaxScore
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -275,8 +264,65 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        legalActions = gameState.getLegalActions(0)
+        
+        self.debugOut = ""
+        
+        maxScore = None
+        retAction = None
+        for action in legalActions:
+            if action != "Stop":
+                value = self.recursiveGetValue(gameState.generateSuccessor(0, action), self.depth, 0)
+                
+#                print "agent = 0; action = " + action + "; value = " + str(value)
+#                print self.debugOut
+#                self.debugOut = ""
+                
+                if maxScore == None or value >= maxScore:
+                    maxScore = value
+                    retAction = action
+        
+        return retAction
+            
+    
+    def recursiveGetValue(self, gameState, depthNum, agent):
+        numAgents = gameState.getNumAgents()
+        agent = agent + 1
+        if agent == numAgents:
+            agent = 0
+            depthNum = depthNum - 1
+        
+        legalActions = gameState.getLegalActions(agent)
+        
+        minMaxScore = None
+        
+        for action in legalActions:
+            if action != "Stop":
+                if depthNum == 1 and agent == numAgents - 1:
+                    if agent == 0:
+                        if minMaxScore == None:
+                            minMaxScore = self.evaluationFunction(gameState.generateSuccessor(agent, action))
+                        else:
+                            minMaxScore = max(self.evaluationFunction(gameState.generateSuccessor(agent, action)), minMaxScore)
+                    else:
+                        if minMaxScore == None:
+                            minMaxScore = self.evaluationFunction(gameState.generateSuccessor(agent, action))
+                        else:
+                            minMaxScore = min(self.evaluationFunction(gameState.generateSuccessor(agent, action)), minMaxScore)
+                else:
+                    minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                
+#                tabs = "  " * (self.depth - depthNum + 1)
+#                self.debugOut = tabs + "agent = " + str(agent) + "; action = " + str(action) + "; value = " + str(minMaxScore) + "\n" + self.debugOut
+        
+        if minMaxScore == None:
+            value = self.evaluationFunction(gameState)
+#            tabs = "  " * (self.depth - depthNum + 1)
+#            self.debugOut = tabs + "agent = " + str(agent) + "; No legal Moves\n" + self.debugOut
+            return value
+        
+        return minMaxScore
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -300,8 +346,70 @@ def betterEvaluationFunction(currentGameState):
 
       DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    oldFood = currentGameState.getFood()
+    oldCapsules = currentGameState.getCapsules()
+    successorGameState = currentGameState.generatePacmanSuccessor(action)
+    oldPos = currentGameState.getPacmanPosition()
+    newPos = successorGameState.getPacmanPosition()
+    newGhostStates = successorGameState.getGhostStates()
+    newFoodGrid = successorGameState.getFood()
+    
+    moveValue = 0
+    
+    # Randomness to stop us from getting stuck
+    isRandom = random.randint(0, 100)
+    
+    if isRandom > 92:
+        moveValue = moveValue + random.randint(-5000, 5000)
+    
+    
+    # Run away from ghosts
+    for ghost in newGhostStates:
+        if ghost.scaredTimer == 0 and manhattanDistance(newPos, ghost.getPosition()) <= 1:
+            moveValue = -10000000000000
+    
+    # Don't move into a wall
+    if newPos == oldPos:
+        moveValue = moveValue + -1000000
+    
+    # This move eats food. Do it.
+    if oldFood[newPos[0]][newPos[1]]:
+        moveValue = moveValue + 1000
+    for capsule in oldCapsules:
+        if capsule == newPos:
+            moveValue = moveValue + 1000
+    for ghost in newGhostStates:
+        if ghost.scaredTimer != 0 and ghost.getPosition() == newPos:
+            moveValue = moveValue + 2000
+            
+    # Eat dat food
+    closestFood = 1000.0
+    for foodPos in newFoodGrid.asList():
+        closestFood = float(min(manhattanDistance(newPos, foodPos), closestFood))
+    
+    moveValue = moveValue + 1.0 / closestFood
+    
+    # Dem Capsules
+    closestFood = 1000.0
+    capsules = successorGameState.getCapsules()
+    for capPos in capsules:
+        closestFood = float(min(manhattanDistance(newPos, capPos), closestFood) - 1.1)
+    
+    moveValue = moveValue + 1.0 / closestFood
+    
+    # Dem Skurrd Ghostz
+    closestFood = 1000.0
+    isEatableGhost = 0
+    for ghost in newGhostStates:
+        dist = manhattanDistance(newPos, ghost.getPosition())
+        if ghost.scaredTimer > dist:
+            closestFood = float(dist) / 2000.0
+            isEatableGhost = 1
+    
+    if isEatableGhost == 1:
+        moveValue = moveValue + 1.0 / closestFood
+
+    return moveValue
 
 # Abbreviation
 better = betterEvaluationFunction
