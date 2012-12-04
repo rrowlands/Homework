@@ -391,25 +391,27 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         minMaxScore = None
         
         for action in legalActions:
+            successor = gameState.generateSuccessor(agent, action)
+            
             if depthNum == 1 and agent == numAgents - 1:
                 if agent == 0:
                     if minMaxScore == None:
-                        minMaxScore = self.evaluationFunction(gameState.generateSuccessor(agent, action))
+                        minMaxScore = self.evaluationFunction(successor)
                     else:
-                        minMaxScore = max(self.evaluationFunction(gameState.generateSuccessor(agent, action)), minMaxScore)
+                        minMaxScore = max(self.evaluationFunction(successor), minMaxScore)
                 else:
                     if minMaxScore == None:
-                        minMaxScore = self.evaluationFunction(gameState.generateSuccessor(agent, action))
+                        minMaxScore = self.evaluationFunction(successor)
                     else:
-                        minMaxScore = minMaxScore + self.evaluationFunction(gameState.generateSuccessor(agent, action))
+                        minMaxScore = minMaxScore + self.evaluationFunction(successor)
             else:
                 if agent == 0:
                     if minMaxScore == None:
-                        minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                        minMaxScore = self.recursiveGetValue(successor, depthNum, agent)
                     else:
-                        minMaxScore = max(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent), minMaxScore)
+                        minMaxScore = max(self.recursiveGetValue(successor, depthNum, agent), minMaxScore)
                 else:
-                    value = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                    value = self.recursiveGetValue(successor, depthNum, agent)
                     
                     if minMaxScore == None:
                         minMaxScore = 0
@@ -445,10 +447,17 @@ def betterEvaluationFunction(currentGameState):
     
     moveValue = currentGameState.getScore()
     
-    # There is a ghost at this location.
+    # Eat scared ghosts, run from non-scared ghosts
     for ghost in ghosts:
         if ghost.scaredTimer == 0 and pos == ghost.getPosition():
             moveValue = moveValue + -10000000000000
+        elif ghost.scaredTimer >= 1 and pos == ghost.getPosition():
+            moveValue = moveValue + 100000000
+        else:
+            hatDist = float(manhattanDistance(ghost.getPosition(), pos))
+            
+            if hatDist > ghost.scaredTimer:
+                moveValue = moveValue + 6.0 / hatDist
     
     # Add value based on the distances to food
     for fPos in food:
