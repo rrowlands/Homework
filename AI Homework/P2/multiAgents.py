@@ -436,64 +436,35 @@ def betterEvaluationFunction(currentGameState):
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
 
-      DESCRIPTION: <write something here so we know what you did>
+      DESCRIPTION: Ran from ghosts and ate food.
     """
-    food = currentGameState.getFood()
+    food = currentGameState.getFood().asList()
     capsules = currentGameState.getCapsules()
     pos = currentGameState.getPacmanPosition()
     ghosts = currentGameState.getGhostStates()
     
-    moveValue = 0
+    moveValue = currentGameState.getScore()
     
-    # Randomness to stop us from getting stuck
-#    isRandom = random.randint(0, 100)
-    
-#    if isRandom > 92:
-#        moveValue = moveValue + random.randint(-5000, 5000)
-    
-    
-    # Run away from ghosts
+    # There is a ghost at this location.
     for ghost in ghosts:
         if ghost.scaredTimer == 0 and pos == ghost.getPosition():
-            moveValue = -10000000000000
-    """
-    # This move eats food. Do it.
-    if oldFood[newPos[0]][newPos[1]]:
-        moveValue = moveValue + 1000
-    for capsule in oldCapsules:
-        if capsule == newPos:
-            moveValue = moveValue + 1000
-    for ghost in newGhostStates:
-        if ghost.scaredTimer != 0 and ghost.getPosition() == newPos:
-            moveValue = moveValue + 2000
-            
-    # Eat dat food
-    closestFood = 1000.0
-    for foodPos in newFoodGrid.asList():
-        closestFood = float(min(manhattanDistance(newPos, foodPos), closestFood))
+            moveValue = moveValue + -10000000000000
     
-    moveValue = moveValue + 1.0 / closestFood
+    # Add value based on the distances to food
+    for fPos in food:
+        moveValue = moveValue + 6.0 / float(manhattanDistance(fPos, pos))
     
-    # Dem Capsules
-    closestFood = 1000.0
-    capsules = successorGameState.getCapsules()
-    for capPos in capsules:
-        closestFood = float(min(manhattanDistance(newPos, capPos), closestFood) - 1.1)
+    # Add value for capsules
+#    for capsule in capsules:
+#        moveValue = moveValue + 10.0 / float(manhattanDistance(capsule, pos))
+#        
+#    # Dem Capsules
+#    closestFood = 1000.0
+#    for capPos in capsules:
+#        closestFood = float(min(manhattanDistance(pos, capPos), closestFood) - 1.1)
+#    
+#    moveValue = moveValue + 1.0 / closestFood
     
-    moveValue = moveValue + 1.0 / closestFood
-    
-    # Dem Skurrd Ghostz
-    closestFood = 1000.0
-    isEatableGhost = 0
-    for ghost in newGhostStates:
-        dist = manhattanDistance(newPos, ghost.getPosition())
-        if ghost.scaredTimer > dist:
-            closestFood = float(dist) / 2000.0
-            isEatableGhost = 1
-    
-    if isEatableGhost == 1:
-        moveValue = moveValue + 1.0 / closestFood
-    """
     return moveValue
 
 # Abbreviation
