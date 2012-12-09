@@ -282,7 +282,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         retAction = None
         for action in legalActions:
             if action != "Stop":
-                value = self.recursiveGetValue(gameState.generateSuccessor(0, action), self.depth, 0)
+                if maxScore == None:
+                    value = self.recursiveGetValue(gameState.generateSuccessor(0, action), self.depth, 0, -10000000, 10000000)
+                else:
+                    value = self.recursiveGetValue(gameState.generateSuccessor(0, action), self.depth, 0, maxScore, 10000000)
                 
 #                print "agent = 0; action = " + action + "; value = " + str(value)
 #                print self.debugOut
@@ -295,7 +298,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         return retAction
             
     
-    def recursiveGetValue(self, gameState, depthNum, agent):
+    def recursiveGetValue(self, gameState, depthNum, agent, best, worst):
         numAgents = gameState.getNumAgents()
         agent = agent + 1
         if agent == numAgents:
@@ -305,9 +308,13 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         legalActions = gameState.getLegalActions(agent)
         
         minMaxScore = None
-        
-        for action in legalActions:
+                
+        if agent==0:
+            best = None
+                
+        for action in legalActions: 
             if action != "Stop":
+                #If node is a leaf. 
                 if depthNum == 1 and agent == numAgents - 1:
                     if agent == 0:
                         if minMaxScore == None:
@@ -320,16 +327,31 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                         else:
                             minMaxScore = min(self.evaluationFunction(gameState.generateSuccessor(agent, action)), minMaxScore)
                 else:
+                    #Node is a branch, so call children:
                     if agent == 0:
                         if minMaxScore == None:
-                            minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                            minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent, -10000000, 10000000)
                         else:
-                            minMaxScore = max(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent), minMaxScore)
+                            minMaxScore = max(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent, minMaxScore, 10000000), minMaxScore)
                     else:
                         if minMaxScore == None:
-                            minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent)
+                            minMaxScore = self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent, best, 10000000)
                         else:
-                            minMaxScore = min(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent), minMaxScore)
+                            minMaxScore = min(self.recursiveGetValue(gameState.generateSuccessor(agent, action), depthNum, agent, best, minMaxScore), minMaxScore)
+
+            #alpha-beta pruning specific
+            if agent==0:
+                if best==None:
+                    best = minMaxScore
+            else:
+                if worst==None:
+                    worst = minMaxScore
+                
+            if agent==0 and minMaxScore>=worst:
+                return minMaxScore
+            if agent!=0 and minMaxScore<=best:
+                return minMaxScore
+ 
                 
 #                tabs = "  " * (self.depth - depthNum + 1)
 #                self.debugOut = tabs + "agent = " + str(agent) + "; action = " + str(action) + "; value = " + str(minMaxScore) + "\n" + self.debugOut
