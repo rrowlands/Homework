@@ -110,6 +110,7 @@ class ExactInference(InferenceModule):
         should only consider positions that are in self.legalPositions).
         """
         noisyDistance = observation
+        
         emissionModel = busters.getObservationDistribution(noisyDistance)
         pacmanPosition = gameState.getPacmanPosition()
 
@@ -118,7 +119,12 @@ class ExactInference(InferenceModule):
         allPossible = util.Counter()
         for p in self.legalPositions:
             trueDistance = util.manhattanDistance(p, pacmanPosition)
-            if emissionModel[trueDistance] > 0: allPossible[p] = 1.0
+            
+            #if emissionModel[trueDistance] > 0:
+             #   allPossible[p] = self.beliefs[p]
+             
+            allPossible[p] = self.beliefs[p] * emissionModel[trueDistance]
+        
         allPossible.normalize()
 
         "*** YOUR CODE HERE ***"
@@ -168,6 +174,22 @@ class ExactInference(InferenceModule):
         """
 
         "*** YOUR CODE HERE ***"
+        
+        newBeliefs = util.Counter()
+        
+        for ghostPos in self.legalPositions:
+        #for ghostPos, oldProb in self.beliefs.iteritems():
+        
+            newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, ghostPos))
+            
+            for newPos, newPosProb in newPosDist.iteritems():
+                newBeliefs[newPos] = self.beliefs[ghostPos] * newPosProb + newBeliefs[newPos]
+                
+        newBeliefs.normalize()
+        self.beliefs = newBeliefs
+        
+        # newPosDist is a util.Counter object, where for each position p in self.legalPositions,
+        #newPostDist[p] = Pr( ghost is at position p at time t + 1 | ghost is at position oldPos at time t )
 
     def getBeliefDistribution(self):
         return self.beliefs

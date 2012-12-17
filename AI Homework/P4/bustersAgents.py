@@ -109,4 +109,42 @@ class GreedyBustersAgent(BustersAgent):
                                             in enumerate(self.ghostBeliefs)
                                             if livingGhosts[i+1]]
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        ghostLocs = util.Counter()
+        for agent in range(1, len(self.ghostBeliefs)):
+            Xmass = 0
+            Xpos = 1
+            Ymass = 0
+            Ypos = 1
+            for pos, prob in self.ghostBeliefs[agent].iteritems():
+                Xpos = self.centerOfMass(Xmass, Xpos, prob, pos[0])
+                Ypos = self.centerOfMass(Ymass, Ypos, prob, pos[1])
+                Ymass = prob + Ymass
+                Xmass = prob + Xmass
+            
+            ghostLocs[agent] = (Xpos, Ypos)
+        
+        ghostDist = 999999999999
+        closestAgent = 1
+        for agent in range(1, len(self.ghostBeliefs)):
+            tempDist = self.distancer.getDistance(pacmanPosition, ghostLocs[agent])
+            if (ghostDist >= tempDist):
+                ghostDist = tempDist
+                closestAgent = agent
+        
+        bestDist = 0
+        bestAct = legal[0]
+        for action in legal:
+            tempDist = self.distancer.getDistance(ghostLocs[closestAgent], Actions.getSuccessor(pacmanPosition, action))
+            
+            if tempDist < bestDist:
+                bestDist = tempDist
+                bestAct = action
+        
+        return bestAct
+        
+        
+    def centerOfMass(self, n, Xn, m, Xm):
+        if m == 0 and n == 0:
+            return 0
+        
+        return ( (m) / (m + n) ) * (Xn - Xm) + Xm
