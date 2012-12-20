@@ -109,32 +109,51 @@ class GreedyBustersAgent(BustersAgent):
                                             in enumerate(self.ghostBeliefs)
                                             if livingGhosts[i+1]]
         "*** YOUR CODE HERE ***"
+        
+        """
+        for x in range(0, 100):
+            try :
+                tempDist = self.distancer.getDistance(pacmanPosition, (x, 1))
+            except Exception:
+                print "Exception occurred at x = " + str(x)
+        
+        for y in range(0, 100):
+            try :
+                tempDist = self.distancer.getDistance(pacmanPosition, (3, y))
+            except Exception:
+                print "Exception occurred at y = " + str(y)
+        """
+        
         ghostLocs = util.Counter()
-        for agent in range(1, len(self.ghostBeliefs)):
-            Xmass = 0
-            Xpos = 1
-            Ymass = 0
-            Ypos = 1
-            for pos, prob in self.ghostBeliefs[agent].iteritems():
-                Xpos = self.centerOfMass(Xmass, Xpos, prob, pos[0])
-                Ypos = self.centerOfMass(Ymass, Ypos, prob, pos[1])
-                Ymass = prob + Ymass
-                Xmass = prob + Xmass
+        for agent in range(0, len(livingGhostPositionDistributions)):
+            #xcomList = [(0, 10000), (10, 5), (-20, 5)]
+            xcomList = [(pos[0], prob) for pos, prob in livingGhostPositionDistributions[agent].iteritems()]
+            ycomList = [(pos[1], prob) for pos, prob in livingGhostPositionDistributions[agent].iteritems()]
             
-            ghostLocs[agent] = (Xpos, Ypos)
+            ghostLocs[agent] = self.clampOntoBoard( ( self.centerOfMass(xcomList), self.centerOfMass(ycomList) ), pacmanPosition )
         
         ghostDist = 999999999999
-        closestAgent = 1
-        for agent in range(1, len(self.ghostBeliefs)):
-            tempDist = self.distancer.getDistance(pacmanPosition, ghostLocs[agent])
+        closestAgent = 0
+        for agent in range(0, len(livingGhostPositionDistributions)):
+            
+            tempDist = 99999999999
+            try :
+                tempDist = self.distancer.getDistance(pacmanPosition, ghostLocs[agent])
+            except Exception:
+                print "Exception, not on board: " + str(pacmanPosition) + ", " + str(ghostLocs[agent])
+            
             if (ghostDist >= tempDist):
                 ghostDist = tempDist
                 closestAgent = agent
         
-        bestDist = 0
+        bestDist = 999999999999
         bestAct = legal[0]
         for action in legal:
-            tempDist = self.distancer.getDistance(ghostLocs[closestAgent], Actions.getSuccessor(pacmanPosition, action))
+            tempDist = 999999999
+            if ghostLocs[closestAgent] == (0, 0):
+                pass
+            else:
+                tempDist = self.distancer.getDistance(ghostLocs[closestAgent], self.castTuple(Actions.getSuccessor(pacmanPosition, action)))
             
             if tempDist < bestDist:
                 bestDist = tempDist
@@ -142,9 +161,64 @@ class GreedyBustersAgent(BustersAgent):
         
         return bestAct
         
+    
+    # The input should be a tuple of (position, mass)
+    def centerOfMass(self, list):
         
-    def centerOfMass(self, n, Xn, m, Xm):
-        if m == 0 and n == 0:
+        sumOfProbs = 0
+        sumOfProbsXPos = 0
+        
+        debugStr = ""
+        for pos, prob in list:
+            debugStr = debugStr + "(" + str(pos) + ", " + str(prob) + ")"
+            sumOfProbs = sumOfProbs + prob
+            sumOfProbsXPos = sumOfProbsXPos + (pos * prob)
+        
+        if sumOfProbs == 0:
             return 0
         
-        return ( (m) / (m + n) ) * (Xn - Xm) + Xm
+        ret = int(round(sumOfProbsXPos / sumOfProbs))
+        
+        return ret
+    
+    def castTuple(self, tuple):
+        x = tuple[0]
+        y = tuple[1]
+        
+        return (int(x), int(y))
+    
+    # If the center of mass equation returns a point that is off the board, this equation will move it onto the board
+    def clampOntoBoard(self, point, pacmanPos):
+        
+        # clamp the X
+        for delta in range(0, 10):
+            try :
+                self.distancer.getDistance(pacmanPos, (point[0] - delta, point[1]))
+                return (point[0] - delta, point[1])
+            except Exception:
+                pass
+            
+            try :
+                self.distancer.getDistance(pacmanPos, (point[0] + delta, point[1]))
+                return (point[0] + delta, point[1])
+            except Exception:
+                pass
+            
+            try :
+                self.distancer.getDistance(pacmanPos, (point[0], point[1] + delta))
+                return (point[0], point[1] + delta)
+            except Exception:
+                pass
+            
+            try :
+                self.distancer.getDistance(pacmanPos, (point[0], point[1] - delta))
+                return (point[0], point[1] - delta)
+            except Exception:
+                pass
+            
+            delta = delta + 1
+        
+        print "Unable to find a clamp for pos " + str(point)
+        
+        return (0, 0)
+            
