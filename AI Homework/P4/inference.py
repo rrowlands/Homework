@@ -207,13 +207,31 @@ class ParticleFilter(InferenceModule):
         "Initializes a list of particles."
         self.numParticles = numParticles
         "*** YOUR CODE HERE ***"
+        self.beliefs = util.Counter()
+        for p in self.legalPositions: self.beliefs[p] = 1.0
+        self.beliefs.normalize()
+
 
     def observe(self, observation, gameState):
         "Update beliefs based on the given distance observation."
         emissionModel = busters.getObservationDistribution(observation)
         pacmanPosition = gameState.getPacmanPosition()
+
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # Replace this code with a correct observation update
+        allPossible = util.Counter()
+        for p in self.legalPositions:
+            trueDistance = util.manhattanDistance(p, pacmanPosition)
+            
+            #if emissionModel[trueDistance] > 0:
+             #   allPossible[p] = self.beliefs[p]
+             
+            allPossible[p] = self.beliefs[p] * emissionModel[trueDistance]
+        
+        allPossible.normalize()
+
+        "*** YOUR CODE HERE ***"
+        self.beliefs = allPossible
 
     def elapseTime(self, gameState):
         """
@@ -228,7 +246,18 @@ class ParticleFilter(InferenceModule):
         position.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        newBeliefs = util.Counter()
+        
+        for ghostPos in self.legalPositions:
+        #for ghostPos, oldProb in self.beliefs.iteritems():
+        
+            newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, ghostPos))
+            
+            for newPos, newPosProb in newPosDist.iteritems():
+                newBeliefs[newPos] = self.beliefs[ghostPos] * newPosProb + newBeliefs[newPos]
+                
+        newBeliefs.normalize()
+        self.beliefs = newBeliefs
 
     def getBeliefDistribution(self):
         """
@@ -236,7 +265,7 @@ class ParticleFilter(InferenceModule):
         ghost locations conditioned on all evidence and time passage.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.beliefs
 
 class MarginalInference(InferenceModule):
     "A wrapper around the JointInference module that returns marginal beliefs about ghosts."
